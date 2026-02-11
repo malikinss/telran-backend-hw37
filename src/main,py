@@ -1,0 +1,82 @@
+# ./src/main.py
+
+import requests
+from typing import List, Dict, Any
+
+URL: str = "http://localhost:11434/api/chat"
+MODEL_NAME: str = "phi3"
+
+
+def chat_request(messages: List[Dict[str, str]]) -> str:
+    """
+    Send a chat request to the Phi-3 API.
+
+    Args:
+        messages: List of messages dicts in the format:
+                  [{"role": "user"|"system"|"assistant", "content": "text"}]
+
+    Returns:
+        The assistant's reply as a string.
+
+    Raises:
+        requests.HTTPError: If the request fails (non-2xx response)
+        KeyError: If the API response does not contain the expected keys
+    """
+    payload: Dict[str, Any] = {
+        "model": MODEL_NAME,
+        "messages": messages,
+        "stream": False
+    }
+
+    resp = requests.post(URL, json=payload)
+    resp.raise_for_status()
+
+    data = resp.json()
+    try:
+        return data["message"]["content"]
+    except KeyError:
+        raise KeyError(
+            "Invalid response structure from server: 'message.content' missing"
+        )
+
+
+def main() -> None:
+    """
+    Simple command-line chat client for Phi-3.
+    Type 'exit' to quit the session.
+    """
+    messages: List[Dict[str, str]] = [
+        {
+            "role": "system",
+            "content": (
+                "You are a helpful assistant. "
+                "Answer briefly and clearly."
+            )
+        }
+    ]
+
+    print("Phi-3 simple chat. Type 'exit' to quit.")
+    while True:
+        user_input = input("You: ").strip()
+        if user_input.lower() == 'exit':
+            print("Bye!")
+            break
+
+        messages.append({"role": "user", "content": user_input})
+
+        try:
+            reply = chat_request(messages)
+        except requests.RequestException as e:
+            print(f"[Error] Request failed: {e}")
+            continue
+        except KeyError as e:
+            print(f"[Error] Unexpected API response: {e}")
+            continue
+
+        messages.append({"role": "assistant", "content": reply})
+        print("\nAgent:", reply)
+        print("_" * 60)
+
+
+if __name__ == "__main__":
+    main()
