@@ -1,5 +1,7 @@
 # ./tests/__init__.py
 
-__all__ = [
+from .test_weather_integration import TestWeatherIntegration
 
+__all__ = [
+    "TestWeatherIntegration"
 ]
