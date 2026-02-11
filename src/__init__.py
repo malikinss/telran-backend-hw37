@@ -1,5 +1,8 @@
 # ./src/__init__.py
 
-__all__ = [
+from .tools import WeatherAPI, WeatherInfo
 
+__all__ = [
+    "WeatherAPI",
+    "WeatherInfo"
 ]
